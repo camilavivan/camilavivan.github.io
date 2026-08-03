@@ -70,45 +70,7 @@ avatar: "avatar.webp"             # 头像请放到 static/avatar/avatar.webp
 
 # 文章封面控制（未设置时默认使用 banner）
 cover:
-    - https://cdn.jsdelivr.net/gh/Ghostpanter/tuchuang/img/202301050959939.jpg
-    - https://cdn.jsdelivr.net/gh/Ghostpanter/tuchuang/img/202301050959355.jpg
-    - https://cdn.jsdelivr.net/gh/Ghostpanter/tuchuang/img/202301051001001.jpg
-    - https://cdn.jsdelivr.net/gh/Ghostpanter/tuchuang/img/202301051002227.png
-    - https://cdn.jsdelivr.net/gh/Ghostpanter/tuchuang/img/202301051003635.jpg
-    - https://cdn.jsdelivr.net/gh/Ghostpanter/tuchuang/img/202301051005248.jpg
-    - https://cdn.jsdelivr.net/gh/Ghostpanter/tuchuang/img/75075054_p0.png
-    - https://cdn.jsdelivr.net/gh/Ghostpanter/tuchuang/img/75077745_p0.jpg
-    - https://cdn.jsdelivr.net/gh/Ghostpanter/tuchuang/img/75368085_p0.jpg
-    - https://cdn.jsdelivr.net/gh/Ghostpanter/tuchuang/img/75385594_p0.jpg
-    - https://cdn.jsdelivr.net/gh/Ghostpanter/tuchuang/img/77495593_p0.jpg
-    - https://cdn.jsdelivr.net/gh/Ghostpanter/tuchuang/img/81832441_p2.jpg
-    - https://cdn.jsdelivr.net/gh/Ghostpanter/tuchuang/img/78162562_p0.jpg
-    - https://cdn.jsdelivr.net/gh/Ghostpanter/tuchuang/img/84596624_p0.png
-    - https://cdn.jsdelivr.net/gh/Ghostpanter/tuchuang/img/85975360_p0.jpg
-    - https://imgapi.xl0408.top/index.php
-    - https://air.moe/ranimg/api.php
-    - https://img.xjh.me/random_img.php?type=bg&return=302
-    - https://api.hanximeng.com/ranimg/api.php
-    - https://api.vvhan.com/api/acgimg
-    #- https://api.mz-moe.cn/img.php
-    - https://tenapi.cn/acg
-    #- https://api.paugram.com/wallpaper
-    - https://api.paugram.com/bing/
-    #- https://api.ghser.com/random/api.php
-    #高清壁纸随机图
-    #- https://api.ixiaowai.cn/gqapi/gqapi.php
-    #电脑动漫二次元随机图：
-    #二次元动漫
-    - https://api.ixiaowai.cn/api/api.php
-    #mc酱动漫
-    #- https://api.ixiaowai.cn/mcapi/mcapi.php
-    - http://www.dmoe.cc/random.php
-    #- http://api.btstu.cn/sjbz/?lx=suiji
-    #电脑美女图片：
-    #- http://api.btstu.cn/sjbz/?lx=meizi
-    #- http://api.btstu.cn/sjbz/?lx=m_meizi
-    #- http://api.btstu.cn/sjbz/zsy.php
-    # - https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg
+
 
 # 文章目录（优先级低于 Front-matter 中的 toc）
 toc: true
@@ -590,50 +552,95 @@ home_categories:
 injector:
   head_begin:
   head_end: |
-    <script>
-      function updateClock() {
-        const now = new Date();
-        const timeStr = now.toLocaleTimeString('zh-CN', { hour12: false });
-        const dateStr = now.toLocaleDateString('zh-CN', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-          weekday: 'long'
-        });
-        const clockEl = document.getElementById('live-clock');
-        const dateEl = document.getElementById('live-date');
-        if (clockEl) clockEl.textContent = timeStr;
-        if (dateEl) dateEl.textContent = dateStr;
+    <style>
+      #reimu-clock {
+        background: var(--color-card-bg, #fff);
+        border-radius: 12px;
+        padding: 16px 12px;
+        margin-bottom: 1.2rem;
+        text-align: center;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
       }
-      setInterval(updateClock, 1000);
-      updateClock();
-
-      fetch('https://ipapi.co/json/')
-        .then(res => res.json())
-        .then(data => {
-          const locEl = document.getElementById('live-location');
-          if (locEl && data.city) {
-            locEl.textContent = `${data.city} · ${data.region || ''} · ${data.country_name || ''}`;
-          } else if (locEl) {
-            locEl.textContent = '位置获取失败';
-          }
-        })
-        .catch(() => {
-          const locEl = document.getElementById('live-location');
-          if (locEl) locEl.textContent = '位置获取失败';
-        });
-    </script>
+      #reimu-clock .time {
+        font-size: 1.8em;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 1px;
+        margin-bottom: 4px;
+      }
+      #reimu-clock .date {
+        font-size: 0.9em;
+        opacity: 0.75;
+        margin-bottom: 10px;
+      }
+      #reimu-clock .weather {
+        font-size: 0.88em;
+        opacity: 0.85;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+      #reimu-clock .weather img {
+        width: 28px;
+        height: 28px;
+      }
+    </style>
   body_begin:
   body_end:
   sidebar_begin: |
-    <div class="widget" id="clock-widget">
-      <div class="widget-title">当前时间 · 位置</div>
-      <div style="text-align: center; padding: 12px 0 8px;">
-        <div id="live-clock" style="font-size: 1.55em; font-weight: 600; letter-spacing: 1px; font-variant-numeric: tabular-nums;"></div>
-        <div id="live-date" style="font-size: 0.88em; opacity: 0.75; margin-top: 4px;"></div>
-        <div id="live-location" style="font-size: 0.82em; opacity: 0.7; margin-top: 8px;">正在获取位置...</div>
+    <div class="widget" id="reimu-clock">
+      <div class="time" id="clock-time">--:--:--</div>
+      <div class="date" id="clock-date">加载中...</div>
+      <div class="weather" id="clock-weather">
+        <span>正在获取天气...</span>
       </div>
     </div>
+
+    <script>
+      // 时钟
+      function updateTime() {
+        const now = new Date();
+        document.getElementById('clock-time').textContent =
+          now.toLocaleTimeString('zh-CN', { hour12: false });
+        document.getElementById('clock-date').textContent =
+          now.toLocaleDateString('zh-CN', {
+            year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
+          });
+      }
+      setInterval(updateTime, 1000);
+      updateTime();
+
+      // 和风天气（需要你的 Key)
+      const QWEATHER_KEY = '你的和风天气Key';  // ← 这里改成你的 Key
+
+      // 先获取城市 Location ID
+      fetch(`https://geoapi.qweather.com/v2/city/lookup?location=auto_ip&key=${QWEATHER_KEY}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.code === '200' && data.location && data.location[0]) {
+            const loc = data.location[0];
+            const cityName = loc.name;
+            const locationId = loc.id;
+
+            // 获取实时天气
+            return fetch(`https://devapi.qweather.com/v7/weather/now?location=${locationId}&key=${QWEATHER_KEY}`)
+              .then(r => r.json())
+              .then(weather => {
+                if (weather.code === '200') {
+                  const now = weather.now;
+                  document.getElementById('clock-weather').innerHTML = `
+                    <img src="https://a.hecdn.net/img/common/icon/202106d/${now.icon}.png" alt="">
+                    <span>${cityName} · ${now.text} ${now.temp}°C</span>
+                  `;
+                }
+              });
+          }
+        })
+        .catch(() => {
+          document.getElementById('clock-weather').textContent = '天气获取失败';
+        });
+    </script>
   sidebar_end:
 
 # PJAX（强烈建议开启，避免音乐播放器切换页面时暂停）
