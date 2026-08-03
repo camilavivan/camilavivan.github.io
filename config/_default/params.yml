@@ -550,10 +550,51 @@ home_categories:
 
 injector:
   head_begin:
-  head_end:
+  head_end: |
+    <script>
+      function updateClock() {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('zh-CN', { hour12: false });
+        const dateStr = now.toLocaleDateString('zh-CN', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          weekday: 'long'
+        });
+        const clockEl = document.getElementById('live-clock');
+        const dateEl = document.getElementById('live-date');
+        if (clockEl) clockEl.textContent = timeStr;
+        if (dateEl) dateEl.textContent = dateStr;
+      }
+      setInterval(updateClock, 1000);
+      updateClock();
+
+      fetch('https://ipapi.co/json/')
+        .then(res => res.json())
+        .then(data => {
+          const locEl = document.getElementById('live-location');
+          if (locEl && data.city) {
+            locEl.textContent = `${data.city} · ${data.region || ''} · ${data.country_name || ''}`;
+          } else if (locEl) {
+            locEl.textContent = '位置获取失败';
+          }
+        })
+        .catch(() => {
+          const locEl = document.getElementById('live-location');
+          if (locEl) locEl.textContent = '位置获取失败';
+        });
+    </script>
   body_begin:
   body_end:
-  sidebar_begin:
+  sidebar_begin: |
+    <div class="widget" id="clock-widget">
+      <div class="widget-title">当前时间 · 位置</div>
+      <div style="text-align: center; padding: 12px 0 8px;">
+        <div id="live-clock" style="font-size: 1.55em; font-weight: 600; letter-spacing: 1px; font-variant-numeric: tabular-nums;"></div>
+        <div id="live-date" style="font-size: 0.88em; opacity: 0.75; margin-top: 4px;"></div>
+        <div id="live-location" style="font-size: 0.82em; opacity: 0.7; margin-top: 8px;">正在获取位置...</div>
+      </div>
+    </div>
   sidebar_end:
 
 # PJAX（强烈建议开启，避免音乐播放器切换页面时暂停）
