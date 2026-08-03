@@ -5,16 +5,16 @@
 # 主导航菜单
 # 图标说明：https://github.com/D-Sketon/hexo-theme-reimu/issues/30
 menu:
-  - name: 首页                    # 原 home → 改为中文
+  - name: home
     url: ""
-    icon:                         # 默认使用太极图标
-  - name: 归档                    # 原 archives → 改为中文
+    icon: # default use taichi icon, you can use a hexadecimal representation of fontawesome or icon_font, like 'f0c1'
+  - name: archives
     url: "archives"
     icon:
-  - name: 关于                    # 原 about → 改为中文
+  - name: about
     url: "about"
     icon:
-  - name: 友链                    # 原 friend → 改为中文
+  - name: friend
     url: "friend"
     icon:
 
