@@ -1,4 +1,4 @@
-baseURL = 'https://camilavivan.github.io'          # 改成你的实际地址，比如 https://username.github.io/
+baseURL = 'https://camilavivan.github.io/'          # 改成你的实际地址，比如 https://username.github.io/
 languageCode = 'zh-cn'
 title = '我的博客'                      # 改成你的网站标题
 theme = 'reimu'
