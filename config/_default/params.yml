@@ -580,31 +580,13 @@ injector:
       #reimu-clock .weather {
         font-size: 0.88em;
         opacity: 0.85;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
         color: var(--color-text, #ccc);
-      }
-      #reimu-clock .weather img {
-        width: 28px;
-        height: 28px;
       }
     </style>
   body_begin:
-  body_end:
-  sidebar_begin: |
-    <div class="widget" id="reimu-clock">
-      <div class="time" id="clock-time">--:--:--</div>
-      <div class="date" id="clock-date">加载中...</div>
-      <div class="weather">
-        <span id="weather-text">正在获取位置...</span>
-      </div>
-    </div>
-
+  body_end: |
     <script>
       (function() {
-        // 防止 PJAX 重复声明
         if (window.__reimuClockLoaded) return;
         window.__reimuClockLoaded = true;
 
@@ -620,51 +602,23 @@ injector:
         setInterval(updateTime, 1000);
         updateTime();
 
-        function getWeatherText(code) {
-          const map = {
-            0: '晴', 1: '晴', 2: '多云', 3: '阴',
-            45: '雾', 48: '雾',
-            51: '小雨', 53: '中雨', 55: '大雨',
-            61: '小雨', 63: '中雨', 65: '大雨',
-            71: '小雪', 73: '中雪', 75: '大雪',
-            80: '阵雨', 81: '阵雨', 82: '暴雨',
-            95: '雷阵雨', 96: '雷阵雨', 99: '雷暴'
-          };
-          return map[code] || '未知';
-        }
-
-        async function loadWeather() {
+        function loadWeather() {
           const weatherEl = document.getElementById('weather-text');
-          if (!weatherEl) return;
-
-          // 因为 Open-Meteo 在你网络下经常失败，这里直接显示固定位置
-          // 想改城市就改下面这行文字
-          weatherEl.textContent = '新加坡 · 多云 29°C';
-
-          // 如果以后网络能访问 Open-Meteo，可以取消下面注释恢复自动定位
-          /*
-          try {
-            const res = await fetch('https://get.geojs.io/v1/ip/geo.json');
-            const loc = await res.json();
-            if (loc.latitude && loc.longitude) {
-              const weatherRes = await fetch(
-                `https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current=temperature_2m,weather_code&timezone=auto`
-              );
-              const data = await weatherRes.json();
-              if (data.current) {
-                const temp = Math.round(data.current.temperature_2m);
-                const text = getWeatherText(data.current.weather_code);
-                weatherEl.textContent = `${loc.city || loc.country} · ${text} ${temp}°C`;
-              }
-            }
-          } catch (e) {
-            weatherEl.textContent = '位置/天气获取失败';
+          if (weatherEl) {
+            weatherEl.textContent = 'Singapore · 晴 32°C';
           }
-          */
         }
-
         loadWeather();
       })();
+    </script>
+  sidebar_begin: |
+    <div class="widget" id="reimu-clock">
+      <div class="time" id="clock-time">--:--:--</div>
+      <div class="date" id="clock-date">加载中...</div>
+      <div class="weather">
+        <span id="weather-text">正在获取位置...</span>
+      </div>
+    </div>
   sidebar_end:
 
 # PJAX（强烈建议开启，避免音乐播放器切换页面时暂停）
