@@ -554,12 +554,14 @@ injector:
   head_end: |
     <style>
       #reimu-clock {
-        background: var(--color-card-bg, #fff);
+        background: var(--color-card-bg, var(--card-bg, #1e1e2e));
         border-radius: 12px;
         padding: 16px 12px;
         margin-bottom: 1.2rem;
         text-align: center;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        color: var(--color-text, #e0e0e0);
+        border: 1px solid rgba(255,255,255,0.05);
       }
       #reimu-clock .time {
         font-size: 1.8em;
@@ -567,11 +569,13 @@ injector:
         font-variant-numeric: tabular-nums;
         letter-spacing: 1px;
         margin-bottom: 4px;
+        color: var(--color-text, #fff);
       }
       #reimu-clock .date {
         font-size: 0.9em;
         opacity: 0.75;
         margin-bottom: 10px;
+        color: var(--color-text, #ccc);
       }
       #reimu-clock .weather {
         font-size: 0.88em;
@@ -580,6 +584,7 @@ injector:
         align-items: center;
         justify-content: center;
         gap: 6px;
+        color: var(--color-text, #ccc);
       }
       #reimu-clock .weather img {
         width: 28px;
@@ -589,58 +594,79 @@ injector:
   body_begin:
   body_end:
   sidebar_begin: |
-    <div class="widget" id="reimu-clock">
+      <div class="widget" id="reimu-clock">
       <div class="time" id="clock-time">--:--:--</div>
       <div class="date" id="clock-date">加载中...</div>
-      <div class="weather" id="clock-weather">
-        <span>正在获取天气...</span>
+      <div class="weather">
+        <span id="weather-text">正在获取天气...</span>
       </div>
-    </div>
+      </div>
 
-    <script>
-      // 时钟
+      <script>
+      // 实时时钟
       function updateTime() {
         const now = new Date();
-        document.getElementById('clock-time').textContent =
-          now.toLocaleTimeString('zh-CN', { hour12: false });
-        document.getElementById('clock-date').textContent =
-          now.toLocaleDateString('zh-CN', {
+        const timeEl = document.getElementById('clock-time');
+        const dateEl = document.getElementById('clock-date');
+        if (timeEl) {
+          timeEl.textContent = now.toLocaleTimeString('zh-CN', { hour12: false });
+        }
+        if (dateEl) {
+          dateEl.textContent = now.toLocaleDateString('zh-CN', {
             year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
           });
+        }
       }
       setInterval(updateTime, 1000);
       updateTime();
 
-      // 和风天气（需要你的 Key)
-      const QWEATHER_KEY = '你的和风天气Key';  // ← 这里改成你的 Key
+      // 根据访问者 IP 自动获取位置 + 天气（Open-Meteo，无需 Key）
+      function loadWeather() {
+        const weatherEl = document.getElementById('weather-text');
+        if (!weatherEl) return;
 
-      // 先获取城市 Location ID
-      fetch(`https://geoapi.qweather.com/v2/city/lookup?location=auto_ip&key=${QWEATHER_KEY}`)
-        .then(r => r.json())
-        .then(data => {
-          if (data.code === '200' && data.location && data.location[0]) {
-            const loc = data.location[0];
-            const cityName = loc.name;
-            const locationId = loc.id;
+        fetch('https://ipapi.co/json/')
+          .then(r => r.json())
+          .then(loc => {
+            if (!loc.latitude || !loc.longitude) {
+              throw new Error('无法获取位置');
+            }
+            const city = loc.city || loc.region || '未知位置';
+            const lat = loc.latitude;
+            const lon = loc.longitude;
 
-            // 获取实时天气
-            return fetch(`https://devapi.qweather.com/v7/weather/now?location=${locationId}&key=${QWEATHER_KEY}`)
+            return fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&timezone=auto`)
               .then(r => r.json())
-              .then(weather => {
-                if (weather.code === '200') {
-                  const now = weather.now;
-                  document.getElementById('clock-weather').innerHTML = `
-                    <img src="https://a.hecdn.net/img/common/icon/202106d/${now.icon}.png" alt="">
-                    <span>${cityName} · ${now.text} ${now.temp}°C</span>
-                  `;
+              .then(data => {
+                if (data.current) {
+                  const temp = Math.round(data.current.temperature_2m);
+                  const text = getWeatherText(data.current.weather_code);
+                  weatherEl.textContent = `${city} · ${text} ${temp}°C`;
+                } else {
+                  weatherEl.textContent = `${city} · 天气获取失败`;
                 }
               });
-          }
-        })
-        .catch(() => {
-          document.getElementById('clock-weather').textContent = '天气获取失败';
-        });
-    </script>
+          })
+          .catch(() => {
+            weatherEl.textContent = '位置/天气获取失败';
+          });
+      }
+
+      function getWeatherText(code) {
+        const map = {
+          0: '晴', 1: '晴', 2: '多云', 3: '阴',
+          45: '雾', 48: '雾',
+          51: '小雨', 53: '中雨', 55: '大雨',
+          61: '小雨', 63: '中雨', 65: '大雨',
+          71: '小雪', 73: '中雪', 75: '大雪',
+          80: '阵雨', 81: '阵雨', 82: '暴雨',
+          95: '雷阵雨', 96: '雷阵雨', 99: '雷暴'
+        };
+        return map[code] || '未知';
+      }
+
+      loadWeather();
+      </script>
   sidebar_end:
 
 # PJAX（强烈建议开启，避免音乐播放器切换页面时暂停）
