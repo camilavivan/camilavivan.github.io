@@ -598,7 +598,7 @@ injector:
       <div class="time" id="clock-time">--:--:--</div>
       <div class="date" id="clock-date">加载中...</div>
       <div class="weather">
-        <span id="weather-text">正在获取天气...</span>
+        <span id="weather-text">正在获取位置...</span>
       </div>
       </div>
 
@@ -608,55 +608,15 @@ injector:
         const now = new Date();
         const timeEl = document.getElementById('clock-time');
         const dateEl = document.getElementById('clock-date');
-        if (timeEl) {
-          timeEl.textContent = now.toLocaleTimeString('zh-CN', { hour12: false });
-        }
-        if (dateEl) {
-          dateEl.textContent = now.toLocaleDateString('zh-CN', {
-            year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
-          });
-        }
+        if (timeEl) timeEl.textContent = now.toLocaleTimeString('zh-CN', { hour12: false });
+        if (dateEl) dateEl.textContent = now.toLocaleDateString('zh-CN', {
+          year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
+        });
       }
       setInterval(updateTime, 1000);
       updateTime();
 
-      // 根据访问者 IP 自动获取位置 + 天气（更稳定版本）
-      function loadWeather() {
-        const weatherEl = document.getElementById('weather-text');
-        if (!weatherEl) return;
-
-      // 主接口：geojs.io（目前较稳定）
-      fetch('https://get.geojs.io/v1/ip/geo.json')
-        .then(r => r.json())
-        .then(loc => {
-          if (!loc.latitude || !loc.longitude) {
-            throw new Error('位置信息为空');
-          }
-
-          const city = loc.city || loc.region || loc.country || '未知位置';
-          const lat = loc.latitude;
-          const lon = loc.longitude;
-
-      // 请求天气
-      return fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&timezone=auto`)
-        .then(r => r.json())
-        .then(data => {
-          if (data.current) {
-            const temp = Math.round(data.current.temperature_2m);
-            const text = getWeatherText(data.current.weather_code);
-            weatherEl.textContent = `${city} · ${text} ${temp}°C`;
-          } else {
-            weatherEl.textContent = `${city} · 天气获取失败`;
-          }
-        });
-      })
-      .catch(err => {
-      console.warn('天气获取失败:', err);
-      // 失败时显示友好提示，而不是一直转圈
-      weatherEl.textContent = '位置/天气获取失败';
-      });
-      }
-
+      // 天气代码转中文
       function getWeatherText(code) {
         const map = {
           0: '晴', 1: '晴', 2: '多云', 3: '阴',
@@ -670,7 +630,63 @@ injector:
         return map[code] || '未知';
       }
 
-      // 页面加载后执行
+      // 多个 IP 定位接口（按顺序尝试）
+      const geoApis = [
+        {
+          url: 'https://get.geojs.io/v1/ip/geo.json',
+          parse: d => ({ lat: d.latitude, lon: d.longitude, city: d.city || d.region || d.country })
+        },
+        {
+          url: 'https://ipwho.is/',
+          parse: d => ({ lat: d.latitude, lon: d.longitude, city: d.city || d.region || d.country })
+        },
+        {
+          url: 'https://ipapi.co/json/',
+          parse: d => ({ lat: d.latitude, lon: d.longitude, city: d.city || d.region || d.country_name })
+        }
+      ];
+
+      async function getLocation() {
+        for (const api of geoApis) {
+          try {
+            const res = await fetch(api.url, { signal: AbortSignal.timeout(4000) });
+            if (!res.ok) continue;
+            const data = await res.json();
+            const loc = api.parse(data);
+            if (loc.lat && loc.lon) return loc;
+          } catch (e) {
+            console.warn('定位接口失败:', api.url, e);
+          }
+        }
+        throw new Error('所有定位接口都失败了');
+      }
+
+      async function loadWeather() {
+        const weatherEl = document.getElementById('weather-text');
+        if (!weatherEl) return;
+
+        try {
+          const loc = await getLocation();
+          const city = loc.city || '未知位置';
+
+          const weatherRes = await fetch(
+            `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&current=temperature_2m,weather_code&timezone=auto`
+          );
+          const weatherData = await weatherRes.json();
+
+          if (weatherData.current) {
+            const temp = Math.round(weatherData.current.temperature_2m);
+            const text = getWeatherText(weatherData.current.weather_code);
+            weatherEl.textContent = `${city} · ${text} ${temp}°C`;
+          } else {
+            weatherEl.textContent = `${city} · 天气获取失败`;
+          }
+        } catch (err) {
+          console.error('天气加载失败:', err);
+          weatherEl.textContent = '位置/天气获取失败';
+        }
+      }
+
       loadWeather();
       </script>
   sidebar_end:
@@ -714,7 +730,7 @@ player:
       volume: 0.7
       mutex: true
       listFolded: false
-      lrcType: 3
+      lrcType: 0
   meting:
     enable: true
     meting_api: "https://api.i-meto.com/meting/api?server=:server&type=:type&id=:id&r=:r"
