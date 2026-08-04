@@ -620,36 +620,41 @@ injector:
       setInterval(updateTime, 1000);
       updateTime();
 
-      // 根据访问者 IP 自动获取位置 + 天气（Open-Meteo，无需 Key）
+      // 根据访问者 IP 自动获取位置 + 天气（更稳定版本）
       function loadWeather() {
         const weatherEl = document.getElementById('weather-text');
         if (!weatherEl) return;
 
-        fetch('https://ipapi.co/json/')
-          .then(r => r.json())
-          .then(loc => {
-            if (!loc.latitude || !loc.longitude) {
-              throw new Error('无法获取位置');
-            }
-            const city = loc.city || loc.region || '未知位置';
-            const lat = loc.latitude;
-            const lon = loc.longitude;
+      // 主接口：geojs.io（目前较稳定）
+      fetch('https://get.geojs.io/v1/ip/geo.json')
+        .then(r => r.json())
+        .then(loc => {
+          if (!loc.latitude || !loc.longitude) {
+            throw new Error('位置信息为空');
+          }
 
-            return fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&timezone=auto`)
-              .then(r => r.json())
-              .then(data => {
-                if (data.current) {
-                  const temp = Math.round(data.current.temperature_2m);
-                  const text = getWeatherText(data.current.weather_code);
-                  weatherEl.textContent = `${city} · ${text} ${temp}°C`;
-                } else {
-                  weatherEl.textContent = `${city} · 天气获取失败`;
-                }
-              });
-          })
-          .catch(() => {
-            weatherEl.textContent = '位置/天气获取失败';
-          });
+          const city = loc.city || loc.region || loc.country || '未知位置';
+          const lat = loc.latitude;
+          const lon = loc.longitude;
+
+      // 请求天气
+      return fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&timezone=auto`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.current) {
+            const temp = Math.round(data.current.temperature_2m);
+            const text = getWeatherText(data.current.weather_code);
+            weatherEl.textContent = `${city} · ${text} ${temp}°C`;
+          } else {
+            weatherEl.textContent = `${city} · 天气获取失败`;
+          }
+        });
+      })
+      .catch(err => {
+      console.warn('天气获取失败:', err);
+      // 失败时显示友好提示，而不是一直转圈
+      weatherEl.textContent = '位置/天气获取失败';
+      });
       }
 
       function getWeatherText(code) {
@@ -665,6 +670,7 @@ injector:
         return map[code] || '未知';
       }
 
+      // 页面加载后执行
       loadWeather();
       </script>
   sidebar_end:
