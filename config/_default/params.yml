@@ -665,7 +665,7 @@ player:
     enable: true
     meting_api: "https://api.i-meto.com/meting/api?server=:server&type=:type&id=:id&r=:r"
     options:
-      id: "3778678"            # ← 请改成你的网易云歌单/歌曲 ID 3778678   8017562763
+      id: "8017562763"            # ← 请改成你的网易云歌单/歌曲 ID 3778678   8017562763
       server: netease             # netease / tencent / kugou / baidu / kuwo
       type: playlist              # song / playlist / album / artist
 
