@@ -30,9 +30,9 @@ monthFormat: "2006-01"
 dateFormat: "2006-01-02"
 timeFormat: "2006-01-02 15:04:05"
 
-author: 你的名字                   # 请改成你的名字
-email: your@email.com             # 请改成你的邮箱
-description: "一个记录生活与技术的小站"   # 优化为更自然的中文描述
+author: 流水易寒                   # 请改成你的名字
+email: 18816230062qk@gmail.com             # 请改成你的邮箱
+description: "不想做开发的运维不是好运维"   # 优化为更自然的中文描述
 # subtitle: "少女祈祷中..."
 subtitle:
   typing:
@@ -98,7 +98,7 @@ footer:
 
 # 侧边栏
 sidebar:
-  position: right                 # left | right | false
+  position: left                 # left | right | false
   menu: true
   article:
     show_common: true
@@ -129,7 +129,7 @@ tagcloud_limits: 20
 only_show_capsule_in_index: false
 uppercase_capsule: true
 
-show_update_time: false           # 是否显示文章更新时间
+show_update_time: true           # 是否显示文章更新时间
 
 # 摘要
 summary:
@@ -165,7 +165,7 @@ layout:
 triangle_badge:
   enable: false
   icon: github
-  link: https://github.com/你的用户名
+  link: https://github.com/Ghostpanter
 
 anchor_icon:
 
@@ -222,7 +222,7 @@ clarity: false
 ########################################
 
 mermaid:
-  zoom: false
+  zoom: true
 
 code_block:
   expand: true                    # 代码块默认展开
@@ -391,7 +391,7 @@ beaudar:
 ########################################
 
 algolia_search:
-  enable: false
+  enable: true
   appID:
   apiKey:
   indexName:
@@ -490,8 +490,8 @@ top:
 
 # 文章过期提示
 outdate:
-  enable: false
-  daysAgo: 180
+  enable: true
+  daysAgo: 360
   message:
     en: This article was last updated on {time}. Please note that the content may no longer be applicable.
     zh-CN: 本文最后更新于 {time}，请注意文中内容可能已不适用。
