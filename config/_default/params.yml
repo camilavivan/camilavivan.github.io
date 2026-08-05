@@ -562,6 +562,7 @@ injector:
         box-shadow: 0 2px 10px rgba(0,0,0,0.08);
         color: var(--color-text, #e0e0e0);
         border: 1px solid rgba(255,255,255,0.05);
+        font-size: 0.92em;
       }
       #reimu-clock .time {
         font-size: 1.8em;
@@ -574,15 +575,38 @@ injector:
       #reimu-clock .date {
         font-size: 0.9em;
         opacity: 0.75;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
         color: var(--color-text, #ccc);
       }
-      #reimu-clock .weather {
+      #reimu-clock .lunar {
         font-size: 0.88em;
-        opacity: 0.85;
-        color: var(--color-text, #ccc);
+        opacity: 0.9;
+        margin-bottom: 6px;
+        color: #f0c78a;
+      }
+      #reimu-clock .yi-ji {
+        font-size: 0.82em;
+        line-height: 1.5;
+        margin-top: 8px;
+        text-align: left;
+        padding: 0 6px;
+      }
+      #reimu-clock .yi {
+        color: #7dcea0;
+      }
+      #reimu-clock .ji {
+        color: #e74c3c;
+        margin-top: 4px;
+      }
+      #reimu-clock .fortune {
+        margin-top: 8px;
+        font-size: 0.85em;
+        color: #f39c12;
       }
     </style>
+    <!-- 引入农历库 -->
+    <script src="https://cdn.jsdelivr.net/npm/lunar-javascript@1.6.12/lunar.min.js">
+    </script>
   body_begin:
   body_end: |
     <script>
@@ -599,24 +623,49 @@ injector:
             year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
           });
         }
+
+        function updateLunar() {
+          if (typeof Solar === 'undefined') return;
+
+          const solar = Solar.fromDate(new Date());
+          const lunar = solar.getLunar();
+
+          // 农历日期
+          const lunarText = `农历${lunar.getMonthInChinese()}月${lunar.getDayInChinese()}`;
+          const lunarEl = document.getElementById('lunar-date');
+          if (lunarEl) lunarEl.textContent = lunarText + ' · ' + lunar.getDayInGanZhi() + '日';
+
+          // 今日宜忌
+          const yi = lunar.getDayYi().slice(0, 4).join('、') || '无特别事项';
+          const ji = lunar.getDayJi().slice(0, 4).join('、') || '无特别事项';
+          
+          const yiEl = document.getElementById('yi');
+          const jiEl = document.getElementById('ji');
+          if (yiEl) yiEl.textContent = '宜：' + yi;
+          if (jiEl) jiEl.textContent = '忌：' + ji;
+
+          // 简单运势（根据干支日）
+          const ganZhi = lunar.getDayInGanZhi();
+          const fortunes = ['大吉', '中吉', '小吉', '平', '小凶', '凶'];
+          const index = (ganZhi.charCodeAt(0) + ganZhi.charCodeAt(1)) % fortunes.length;
+          const fortuneEl = document.getElementById('fortune');
+          if (fortuneEl) fortuneEl.textContent = '今日运势：' + fortunes[index];
+        }
+
         setInterval(updateTime, 1000);
         updateTime();
-
-        function loadWeather() {
-          const weatherEl = document.getElementById('weather-text');
-          if (weatherEl) {
-            weatherEl.textContent = 'Singapore · 晴 32°C';
-          }
-        }
-        loadWeather();
+        updateLunar();
       })();
     </script>
   sidebar_begin: |
     <div class="widget" id="reimu-clock">
       <div class="time" id="clock-time">--:--:--</div>
       <div class="date" id="clock-date">加载中...</div>
-      <div class="weather">
-        <span id="weather-text">正在获取位置...</span>
+      <div class="lunar" id="lunar-date">农历加载中...</div>
+      <div class="fortune" id="fortune">运势计算中...</div>
+      <div class="yi-ji">
+        <div class="yi" id="yi">宜：加载中...</div>
+        <div class="ji" id="ji">忌：加载中...</div>
       </div>
     </div>
   sidebar_end:
