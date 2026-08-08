@@ -677,65 +677,91 @@ injector:
           if (fortuneEl) fortuneEl.textContent = '今日运势：' + fortunes[index];
         }
 
-        async function loadWeather() {
-          const weatherEl = document.getElementById('weather-text');
-          if (!weatherEl) return;
-          const fallbackCity = '南京';
-          const fallbackLat = 32.0603;
-          const fallbackLon = 118.7969;
+    async function loadWeather() {
+      const weatherEl = document.getElementById('weather-text');
+      if (!weatherEl) return;
 
-          async function fetchWeather(lat, lon, cityName) {
-            const res = await fetch(
-              `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&timezone=auto`,
-              { signal: AbortSignal.timeout(5000) }
-            );
-            if (!res.ok) throw new Error('weather api failed');
-            const data = await res.json();
-            if (!data.current) throw new Error('no current data');
-            const temp = Math.round(data.current.temperature_2m);
-            const text = getWeatherText(data.current.weather_code);
-            weatherEl.textContent = `${cityName} · ${text} ${temp}°C`;
-          }
+      const fallbackCity = '南京';
+      const fallbackLat = 32.0603;
+      const fallbackLon = 118.7969;
 
-          try {
-            const geoRes = await fetch('https://get.geojs.io/v1/ip/geo.json', {
-              signal: AbortSignal.timeout(4000)
-            });
-            if (!geoRes.ok) throw new Error('geo failed');
-            const loc = await geoRes.json();
-            if (loc.latitude && loc.longitude) {
-              const city = loc.city || loc.region || loc.country || '未知位置';
-              await fetchWeather(loc.latitude, loc.longitude, city);
-              return;
+      async function getChineseCity(lat, lon) {
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=zh`,
+            {
+              signal: AbortSignal.timeout(5000),
+              headers: { 'User-Agent': 'HugoBlog/1.0' }
             }
-          } catch (e) {
-            console.warn('定位失败，使用默认南京', e);
-          }
-        // 逆地理拿中文名
-          const geoNameRes = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=zh`,
-          { headers: { 'User-Agent': 'HugoBlog/1.0' } }
           );
-          try {
-            await fetchWeather(fallbackLat, fallbackLon, fallbackCity);
-          } catch (e) {
-            weatherEl.textContent = '南京 · 天气获取失败';
-          }
+          if (!res.ok) return null;
+          const data = await res.json();
+          return (
+            data.address?.city ||
+            data.address?.town ||
+            data.address?.county ||
+            data.address?.state ||
+            data.address?.country ||
+            null
+          );
+        } catch (e) {
+          return null;
         }
+      }
 
-        function getWeatherText(code) {
-          const map = {
-            0: '晴', 1: '晴', 2: '多云', 3: '阴',
-            45: '雾', 48: '雾',
-            51: '小雨', 53: '中雨', 55: '大雨',
-            61: '小雨', 63: '中雨', 65: '大雨',
-            71: '小雪', 73: '中雪', 75: '大雪',
-            80: '阵雨', 81: '阵雨', 82: '暴雨',
-            95: '雷阵雨', 96: '雷阵雨', 99: '雷暴'
-          };
-          return map[code] || '未知';
+      async function fetchWeather(lat, lon, cityName) {
+        const res = await fetch(
+          `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&timezone=auto`,
+          { signal: AbortSignal.timeout(5000) }
+        );
+        if (!res.ok) throw new Error('weather api failed');
+        const data = await res.json();
+        if (!data.current) throw new Error('no current data');
+        const temp = Math.round(data.current.temperature_2m);
+        const text = getWeatherText(data.current.weather_code);
+        weatherEl.textContent = `${cityName} · ${text} ${temp}°C`;
+      }
+
+      try {
+        // 1. 定位
+        const geoRes = await fetch('https://get.geojs.io/v1/ip/geo.json', {
+          signal: AbortSignal.timeout(4000)
+        });
+        if (!geoRes.ok) throw new Error('geo failed');
+        const loc = await geoRes.json();
+
+        if (loc.latitude && loc.longitude) {
+          // 2. 逆地理拿中文城市名
+          let city = await getChineseCity(loc.latitude, loc.longitude);
+          if (!city) city = loc.city || loc.region || loc.country || '未知位置';
+          await fetchWeather(loc.latitude, loc.longitude, city);
+          return;
         }
+      } catch (e) {
+        console.warn('定位失败，使用默认南京', e);
+      }
 
+      // 失败时用南京
+      try {
+        await fetchWeather(fallbackLat, fallbackLon, fallbackCity);
+      } catch (e) {
+        weatherEl.textContent = '南京 · 天气获取失败';
+      }
+    }
+
+    function getWeatherText(code) {
+      const map = {
+        0: '晴', 1: '晴', 2: '多云', 3: '阴',
+        45: '雾', 48: '雾',
+        51: '小雨', 53: '中雨', 55: '大雨',
+        61: '小雨', 63: '中雨', 65: '大雨',
+        71: '小雪', 73: '中雪', 75: '大雪',
+        80: '阵雨', 81: '阵雨', 82: '暴雨',
+        95: '雷阵雨', 96: '雷阵雨', 99: '雷暴'
+      };
+      return map[code] || '未知';
+    }
+    
         setInterval(updateTime, 1000);
         updateTime();
         updateLunar();

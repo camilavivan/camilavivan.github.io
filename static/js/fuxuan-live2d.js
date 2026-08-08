@@ -2,96 +2,53 @@
   if (window.__fuxuanLoaded) return;
   window.__fuxuanLoaded = true;
 
-  let weatherText = '天气获取中...';
-  let fortuneText = '今日运势：平';
-  let yiText = '宜：无特别事项';
-  let jiText = '忌：无特别事项';
-
-  // 从侧边栏读取已计算好的黄历，保证和侧边栏一致
-  function syncFromSidebar() {
-    const fortuneEl = document.getElementById('fortune');
-    const yiEl = document.getElementById('yi');
-    const jiEl = document.getElementById('ji');
-
-    if (fortuneEl && fortuneEl.textContent.trim()) {
-      fortuneText = fortuneEl.textContent.trim();
-    }
-    if (yiEl && yiEl.textContent.trim()) {
-      yiText = yiEl.textContent.trim();
-    }
-    if (jiEl && jiEl.textContent.trim()) {
-      jiText = jiEl.textContent.trim();
-    }
+  // 从侧边栏读取当前信息
+  function getSidebarInfo() {
+    const fortune = (document.getElementById('fortune')?.textContent || '今日运势：平').trim();
+    const weather = (document.getElementById('weather-text')?.textContent || '天气获取中...').trim();
+    const yi = (document.getElementById('yi')?.textContent || '宜：无特别事项').trim();
+    const ji = (document.getElementById('ji')?.textContent || '忌：无特别事项').trim();
+    return { fortune, weather, yi, ji };
   }
 
-  // 天气：定位 + 中文城市名（不使用映射表）
-  async function updateWeather() {
-    try {
-      let lat = 32.0603, lon = 118.7969, city = '南京';
+  // 轮播内容（始终从侧边栏取最新）
+  const fixedMessages = [
+    '命由我定，运由我改。',
+    '星轨已定，你却仍在犹豫？',
+    '有什么想问的，尽管说。',
+    '本座在听。',
+    '想算一卦吗？'
+  ];
 
-      // 1. 获取大致坐标
-      try {
-        const geoRes = await fetch('https://get.geojs.io/v1/ip/geo.json', {
-          signal: AbortSignal.timeout(4000)
-        });
-        if (geoRes.ok) {
-          const loc = await geoRes.json();
-          if (loc.latitude && loc.longitude) {
-            lat = loc.latitude;
-            lon = loc.longitude;
-          }
-        }
-      } catch (e) {}
+  let msgIndex = 0;
 
-      // 2. 用坐标换中文地名（Nominatim，无需映射）
-      try {
-        const geoNameRes = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=zh`,
-          {
-            signal: AbortSignal.timeout(5000),
-            headers: { 'User-Agent': 'HugoBlog/1.0' }
-          }
-        );
-        if (geoNameRes.ok) {
-          const geoData = await geoNameRes.json();
-          // 优先取城市/区，没有就用上级
-          city =
-            geoData.address?.city ||
-            geoData.address?.town ||
-            geoData.address?.county ||
-            geoData.address?.state ||
-            geoData.address?.country ||
-            '未知位置';
-        }
-      } catch (e) {
-        // 逆地理失败就保持默认南京
-      }
+  function getNextMessage() {
+    const info = getSidebarInfo();
+    const list = [
+      info.fortune,
+      info.weather,
+      info.yi,
+      info.ji,
+      ...fixedMessages
+    ];
+    const msg = list[msgIndex % list.length];
+    msgIndex++;
+    return msg;
+  }
 
-      // 3. 获取天气
-      const weatherRes = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&timezone=auto`,
-        { signal: AbortSignal.timeout(5000) }
-      );
-      if (weatherRes.ok) {
-        const data = await weatherRes.json();
-        if (data.current) {
-          const temp = Math.round(data.current.temperature_2m);
-          const map = {
-            0: '晴', 1: '晴', 2: '多云', 3: '阴',
-            45: '雾', 48: '雾',
-            51: '小雨', 53: '中雨', 55: '大雨',
-            61: '小雨', 63: '中雨', 65: '大雨',
-            71: '小雪', 73: '中雪', 75: '大雪',
-            80: '阵雨', 81: '阵雨', 82: '暴雨',
-            95: '雷阵雨', 96: '雷阵雨', 99: '雷暴'
-          };
-          const text = map[data.current.weather_code] || '未知';
-          weatherText = city + ' · ' + text + ' ' + temp + '°C';
-        }
-      }
-    } catch (e) {
-      weatherText = '南京 · 天气获取失败';
-    }
+  // 主动改气泡文字（绕过库初始化时的固定 message）
+  function startTipRotator() {
+    setInterval(() => {
+      const tip = document.getElementById('oml2d-tips');
+      const content = document.getElementById('oml2d-tips-content');
+      if (!tip || !content) return;
+
+      // 只在气泡显示时更新
+      const style = window.getComputedStyle(tip);
+      if (style.opacity === '0' || style.visibility === 'hidden') return;
+
+      content.textContent = getNextMessage();
+    }, 8500);
   }
 
   function init() {
@@ -99,16 +56,6 @@
       setTimeout(init, 150);
       return;
     }
-
-    // 等侧边栏先渲染完再同步
-    setTimeout(() => {
-      syncFromSidebar();
-      updateWeather();
-    }, 800);
-
-    // 定时同步
-    setInterval(syncFromSidebar, 30 * 1000);
-    setInterval(updateWeather, 10 * 60 * 1000);
 
     OML2D.loadOml2d({
       models: [
@@ -134,13 +81,10 @@
           padding: '10px 16px',
           borderRadius: '16px'
         },
+        // 初始先给一组占位，真正内容由上面的 rotator 控制
         idleTips: {
           interval: 8500,
           message: [
-            fortuneText,
-            weatherText,
-            yiText,
-            jiText,
             '命由我定，运由我改。',
             '星轨已定，你却仍在犹豫？',
             '有什么想问的，尽管说。'
@@ -150,14 +94,15 @@
           message: [
             '嗯？找本座有事？',
             '触碰星轨可是要付出代价的。',
-            fortuneText,
-            weatherText,
             '本座在听。',
             '想算一卦吗？'
           ]
         }
       }
     });
+
+    // 启动轮播（从侧边栏读最新数据）
+    setTimeout(startTipRotator, 1500);
   }
 
   init();
