@@ -612,7 +612,7 @@ injector:
     </script>
   body_begin:
   body_end: |
-    <script src="https://unpkg.com/oh-my-live2d@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/oh-my-live2d@latest/dist/index.min.js"></script>
     <script>
       (function() {
         // ========== 符玄 Live2D ==========
