@@ -22,4 +22,10 @@ hasCJKLanguage = true
 
 # 输出格式（如果以后要用 Algolia 搜索可以保留）
 [outputs]
-  home = ['HTML', 'RSS']
+home = ["Algolia", "HTML", "RSS"]
+
+[outputFormats.Algolia]
+baseName = "algolia"
+isPlainText = true
+mediaType = "application/json"
+notAlternative = true

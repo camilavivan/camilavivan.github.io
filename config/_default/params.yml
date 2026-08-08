@@ -87,7 +87,7 @@ excerpt_link: 阅读全文             # 原 Read More → 改为中文
 copyright:
 
 footer:
-  since: 2024                     # 建站年份（请改成你的）
+  since: 2020                     # 建站年份（请改成你的）
   powered: true
   count: true
   busuanzi: true                  # 开启不蒜子统计（中文博客常用）
@@ -727,7 +727,7 @@ player:
       volume: 0.7
       mutex: true
       listFolded: false
-      lrcType: 0
+      lrcType: 1
   meting:
     enable: true
     meting_api: "https://api.i-meto.com/meting/api?server=:server&type=:type&id=:id&r=:r"
