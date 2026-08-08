@@ -2,7 +2,6 @@
   if (window.__fuxuanLoaded) return;
   window.__fuxuanLoaded = true;
 
-  // 从侧边栏读取当前信息
   function getSidebarInfo() {
     const fortune = (document.getElementById('fortune')?.textContent || '今日运势：平').trim();
     const weather = (document.getElementById('weather-text')?.textContent || '天气获取中...').trim();
@@ -11,16 +10,18 @@
     return { fortune, weather, yi, ji };
   }
 
-  // 轮播内容（始终从侧边栏取最新）
   const fixedMessages = [
     '命由我定，运由我改。',
     '星轨已定，你却仍在犹豫？',
     '有什么想问的，尽管说。',
     '本座在听。',
-    '想算一卦吗？'
+    '想算一卦吗？',
+    '嗯？找本座有事？',
+    '触碰星轨可是要付出代价的。'
   ];
 
   let msgIndex = 0;
+  let idleTimer = null;
 
   function getNextMessage() {
     const info = getSidebarInfo();
@@ -36,19 +37,47 @@
     return msg;
   }
 
-  // 主动改气泡文字（绕过库初始化时的固定 message）
-  function startTipRotator() {
-    setInterval(() => {
+  function showTip(text) {
+    const tip = document.getElementById('oml2d-tips');
+    const content = document.getElementById('oml2d-tips-content');
+    if (!tip || !content) return;
+
+    content.textContent = text;
+
+    // 强制显示气泡
+    tip.style.opacity = '1';
+    tip.style.visibility = 'visible';
+  }
+
+  // 空闲：1~8 秒随机间隔
+  function scheduleNextIdle() {
+    if (idleTimer) clearTimeout(idleTimer);
+    const delay = 1000 + Math.random() * 7000; // 1~8 秒
+    idleTimer = setTimeout(() => {
+      showTip(getNextMessage());
+      scheduleNextIdle();
+    }, delay);
+  }
+
+  // 点击看板娘：立刻换一句，并重置空闲计时
+  function bindClick() {
+    // 尝试绑定到舞台 / canvas
+    const stage =
+      document.getElementById('oml2d-stage') ||
+      document.querySelector('#oml2d canvas') ||
+      document.querySelector('[id*="oml2d"] canvas') ||
+      document.querySelector('.oml2d-stage');
+
+    const target = stage || document.body;
+
+    target.addEventListener('click', function (e) {
+      // 只响应看板娘区域附近的点击（简单判断）
       const tip = document.getElementById('oml2d-tips');
-      const content = document.getElementById('oml2d-tips-content');
-      if (!tip || !content) return;
+      if (!tip) return;
 
-      // 只在气泡显示时更新
-      const style = window.getComputedStyle(tip);
-      if (style.opacity === '0' || style.visibility === 'hidden') return;
-
-      content.textContent = getNextMessage();
-    }, 8500);
+      showTip(getNextMessage());
+      scheduleNextIdle(); // 点击后重新开始随机计时
+    });
   }
 
   function init() {
@@ -81,28 +110,23 @@
           padding: '10px 16px',
           borderRadius: '16px'
         },
-        // 初始先给一组占位，真正内容由上面的 rotator 控制
+        // 关闭库自带的定时和点击文案，改由我们自己控制
         idleTips: {
-          interval: 8500,
-          message: [
-            '命由我定，运由我改。',
-            '星轨已定，你却仍在犹豫？',
-            '有什么想问的，尽管说。'
-          ]
+          interval: 999999,
+          message: ['命由我定，运由我改。']
         },
         clickTips: {
-          message: [
-            '嗯？找本座有事？',
-            '触碰星轨可是要付出代价的。',
-            '本座在听。',
-            '想算一卦吗？'
-          ]
+          message: ['']
         }
       }
     });
 
-    // 启动轮播（从侧边栏读最新数据）
-    setTimeout(startTipRotator, 1500);
+    // 启动自定义逻辑
+    setTimeout(() => {
+      bindClick();
+      showTip(getNextMessage());
+      scheduleNextIdle();
+    }, 1200);
   }
 
   init();
