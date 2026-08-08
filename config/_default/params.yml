@@ -612,7 +612,7 @@ injector:
     </script>
   body_begin:
   body_end: |
-    <script src="https://registry.npmmirror.com/oh-my-live2d/0.19.3/files/dist/index.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/oh-my-live2d@0.19.3/dist/index.min.js"></script>
     <script src="/js/fuxuan-live2d.js"></script>
     <script>
       (function() {
