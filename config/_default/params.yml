@@ -658,13 +658,67 @@ injector:
         }
 
         // 天气（这里先写死，后面可换成真实API）
-        function loadWeather() {
+        // 天气：优先获取访问者位置，失败则显示固定地址
+        async function loadWeather() {
           const weatherEl = document.getElementById('weather-text');
-          if (weatherEl) {
-            // 你可以改成自己所在城市
-            weatherEl.textContent = '新加坡 · 晴 32°C';
+          if (!weatherEl) return;
+
+          const fallback = '新加坡 · 晴 32°C';  // 获取失败时显示的固定内容
+
+          try {
+            // 1. 获取访问者大致位置
+            const geoRes = await fetch('https://get.geojs.io/v1/ip/geo.json', {
+              signal: AbortSignal.timeout(4000)
+            });
+            if (!geoRes.ok) throw new Error('geo failed');
+            const loc = await geoRes.json();
+
+            if (!loc.latitude || !loc.longitude) throw new Error('no coords');
+
+            const city = loc.city || loc.region || loc.country || '未知位置';
+
+            // 2. 用坐标获取天气
+            const weatherRes = await fetch(
+              `https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current=temperature_2m,weather_code&timezone=auto`,
+              { signal: AbortSignal.timeout(5000) }
+            );
+            if (!weatherRes.ok) throw new Error('weather failed');
+            const data = await weatherRes.json();
+
+            if (data.current) {
+              const temp = Math.round(data.current.temperature_2m);
+              const text = getWeatherText(data.current.weather_code);
+              weatherEl.textContent = `${city} · ${text} ${temp}°C`;
+              return;
+            }
+          } catch (e) {
+            console.warn('自动定位天气失败，使用固定地址', e);
           }
+
+          // 失败时显示固定内容
+          weatherEl.textContent = fallback;
         }
+
+        // 天气代码转中文（如果还没有这个函数，请一并加上）
+        function getWeatherText(code) {
+          const map = {
+            0: '晴', 1: '晴', 2: '多云', 3: '阴',
+            45: '雾', 48: '雾',
+            51: '小雨', 53: '中雨', 55: '大雨',
+            61: '小雨', 63: '中雨', 65: '大雨',
+            71: '小雪', 73: '中雪', 75: '大雪',
+            80: '阵雨', 81: '阵雨', 82: '暴雨',
+            95: '雷阵雨', 96: '雷阵雨', 99: '雷暴'
+          };
+          return map[code] || '未知';
+        }
+        # function loadWeather() {
+        #   const weatherEl = document.getElementById('weather-text');
+        #   if (weatherEl) {
+        #     // 你可以改成自己所在城市
+        #     weatherEl.textContent = '新加坡 · 晴 32°C';
+        #   }
+        # }
 
         setInterval(updateTime, 1000);
         updateTime();
