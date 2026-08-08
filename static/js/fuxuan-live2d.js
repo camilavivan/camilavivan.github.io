@@ -2,19 +2,19 @@
   if (window.__fuxuanLoaded) return;
   window.__fuxuanLoaded = true;
 
-  // 动态信息
   let weatherText = '天气获取中...';
   let fortuneText = '今日运势：平';
   let yiText = '宜：无特别事项';
   let jiText = '忌：无特别事项';
 
-  // 更新天气 + 农历宜忌运势
   async function updateInfo() {
-    // 天气（优先定位，失败用南京）
+    // 天气
     try {
       let lat = 32.0603, lon = 118.7969, city = '南京';
       try {
-        const geoRes = await fetch('https://get.geojs.io/v1/ip/geo.json', { signal: AbortSignal.timeout(4000) });
+        const geoRes = await fetch('https://get.geojs.io/v1/ip/geo.json', {
+          signal: AbortSignal.timeout(4000)
+        });
         if (geoRes.ok) {
           const loc = await geoRes.json();
           if (loc.latitude && loc.longitude) {
@@ -43,7 +43,7 @@
             95: '雷阵雨', 96: '雷阵雨', 99: '雷暴'
           };
           const text = map[data.current.weather_code] || '未知';
-          weatherText = `${city} · ${text} ${temp}°C`;
+          weatherText = city + ' · ' + text + ' ' + temp + '°C';
         }
       }
     } catch (e) {
@@ -74,19 +74,17 @@
     }
 
     updateInfo();
-
-    // 定时更新信息（每 10 分钟）
     setInterval(updateInfo, 10 * 60 * 1000);
 
     OML2D.loadOml2d({
       models: [
         {
           path: '/live2d/fuxuan/fuxuan.model3.json',
-          scale: 0.048,
-          position: [0, -15],
+          scale: 0.045,
+          position: [0, -10],
           stageStyle: {
-            width: 240,
-            height: 460
+            width: 230,
+            height: 450
           }
         }
       ],
@@ -94,29 +92,30 @@
         disable: true
       },
       tips: {
-        // 玻璃效果气泡
+        // 透明玻璃气泡（能看到网页背景）
         style: {
-          width: 200,
-          minHeight: 50,
+          width: 220,
+          minHeight: 48,
           fontSize: 13,
-          lineHeight: 1.45,
-          padding: '10px 14px',
-          borderRadius: '14px',
-          background: 'rgba(255, 255, 255, 0.72)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          color: '#2d1b4e',
-          boxShadow: '0 8px 24px rgba(124, 58, 237, 0.18)',
-          border: '1px solid rgba(255, 255, 255, 0.45)',
-          textShadow: '0 1px 1px rgba(255,255,255,0.8)'
+          lineHeight: 1.5,
+          padding: '10px 16px',
+          borderRadius: '16px',
+          background: 'rgba(255, 255, 255, 0.25)',
+          backdropFilter: 'blur(14px)',
+          WebkitBackdropFilter: 'blur(14px)',
+          color: '#1a1a2e',
+          boxShadow: '0 6px 20px rgba(0, 0, 0, 0.12)',
+          border: '1px solid rgba(255, 255, 255, 0.35)',
+          zIndex: 9999,
+          wordBreak: 'break-all'
         },
         mobileStyle: {
-          width: 160,
+          width: 170,
           fontSize: 12
         },
-        // 空闲轮播（使用普通字符串，定时刷新内容）
+        // 每个气泡只说一句完整内容
         idleTips: {
-          interval: 9000,
+          interval: 8500,
           message: [
             fortuneText,
             weatherText,
@@ -127,7 +126,6 @@
             '有什么想问的，尽管说。'
           ]
         },
-        // 点击互动
         clickTips: {
           message: [
             '嗯？找本座有事？',
@@ -140,13 +138,6 @@
         }
       }
     });
-
-    // 因为 message 是初始化时的快照，需要定期刷新 tips 内容
-    // 简单做法：每隔一段时间重新设置 tips（兼容性更好）
-    setInterval(() => {
-      // 如果库支持动态更新可以用，这里用重新赋值最稳妥的方式是页面刷新后自然更新
-      // 当前版本主要依赖初始化时的值 + 定时 updateInfo
-    }, 60000);
   }
 
   init();
