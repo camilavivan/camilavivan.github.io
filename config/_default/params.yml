@@ -613,25 +613,32 @@ injector:
   body_begin:
   body_end: |
     <style>
-      #oml2d-tips {
-        background: rgba(255, 255, 255, 0.22) !important;
-        backdrop-filter: blur(14px) !important;
-        -webkit-backdrop-filter: blur(14px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.4) !important;
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12) !important;
-        color: #1a1a2e !important;
-        border-radius: 16px !important;
-        z-index: 99999 !important;
-      }
-      #oml2d-tips-content {
-        color: #1a1a2e !important;
-        background: transparent !important;
-        -webkit-line-clamp: unset !important;
-        display: block !important;
-        overflow: visible !important;
-        text-overflow: unset !important;
-        max-height: none !important;
-      }
+    /* 气泡样式：透明玻璃 */
+    #oml2d-tips {
+      background: rgba(255, 255, 255, 0.22) !important;
+      backdrop-filter: blur(14px) !important;
+      -webkit-backdrop-filter: blur(14px) !important;
+      border: 1px solid rgba(255, 255, 255, 0.4) !important;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12) !important;
+      color: #1a1a2e !important;
+      border-radius: 16px !important;
+      z-index: 99999 !important;
+
+      /* 关键：往上移，避免和人物重叠 */
+      top: -70px !important;
+      left: 50% !important;
+      transform: translateX(-50%) !important;
+    }
+
+    #oml2d-tips-content {
+      color: #1a1a2e !important;
+      background: transparent !important;
+      -webkit-line-clamp: unset !important;
+      display: block !important;
+      overflow: visible !important;
+      text-overflow: unset !important;
+      max-height: none !important;
+    }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/oh-my-live2d@0.19.3/dist/index.min.js"></script>
     <script src="/js/fuxuan-live2d.js"></script>
