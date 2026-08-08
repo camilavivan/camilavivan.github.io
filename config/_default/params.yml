@@ -613,54 +613,9 @@ injector:
   body_begin:
   body_end: |
     <script src="https://registry.npmmirror.com/oh-my-live2d/0.19.3/files/dist/index.min.js"></script>
+    <script src="/js/fuxuan-live2d.js"></script>
     <script>
       (function() {
-        if (!window.__fuxuanLoaded) {
-          window.__fuxuanLoaded = true;
-          OML2D.loadOml2d({
-            models: [
-              {
-                path: "/live2d/fuxuan/fuxuan.model3.json",
-                scale: 0.048,
-                position: [0, -15],
-                stageStyle: {
-                  width: 240,
-                  height: 460
-                }
-              }
-            ],
-            menus: {
-              disable: true
-            },
-            tips: {
-              idleTips: {
-                interval: 10000,
-                message: [
-                  "命由我定，运由我改。",
-                  "星轨已定，你却仍在犹豫？",
-                  "今日运势……让我算算。",
-                  "有什么想问的，尽管说。",
-                  "观察星象，洞察命运。"
-                ]
-              },
-              clickTips: {
-                message: [
-                  "嗯？找本座有事？",
-                  "触碰星轨可是要付出代价的。",
-                  "你的命运线……有些有趣。",
-                  "本座在听。",
-                  "别太放肆。",
-                  "想算一卦吗？"
-                ]
-              // 复制文字时
-              copyTips: {
-                message: ["复制了什么？本座可是看在眼里的。"]
-              }
-            }
-          });
-        }
-        
-        // ========== 时钟 + 农历 + 天气 ==========
         if (window.__reimuClockLoaded) return;
         window.__reimuClockLoaded = true;
 
@@ -676,22 +631,17 @@ injector:
 
         function updateLunar() {
           if (typeof Solar === 'undefined') return;
-
           const solar = Solar.fromDate(new Date());
           const lunar = solar.getLunar();
-
           const lunarText = `农历${lunar.getMonthInChinese()}月${lunar.getDayInChinese()} · ${lunar.getDayInGanZhi()}日`;
           const lunarEl = document.getElementById('lunar-date');
           if (lunarEl) lunarEl.textContent = lunarText;
-
           const yi = lunar.getDayYi().slice(0, 4).join('、') || '无特别事项';
           const ji = lunar.getDayJi().slice(0, 4).join('、') || '无特别事项';
-          
           const yiEl = document.getElementById('yi');
           const jiEl = document.getElementById('ji');
           if (yiEl) yiEl.textContent = '宜：' + yi;
           if (jiEl) jiEl.textContent = '忌：' + ji;
-
           const ganZhi = lunar.getDayInGanZhi();
           const fortunes = ['大吉', '中吉', '小吉', '平', '小凶', '凶'];
           const index = (ganZhi.charCodeAt(0) + ganZhi.charCodeAt(1)) % fortunes.length;
@@ -699,11 +649,9 @@ injector:
           if (fortuneEl) fortuneEl.textContent = '今日运势：' + fortunes[index];
         }
 
-        // 天气：优先访问者位置，失败则使用南京
         async function loadWeather() {
           const weatherEl = document.getElementById('weather-text');
           if (!weatherEl) return;
-
           const fallbackCity = '南京';
           const fallbackLat = 32.0603;
           const fallbackLon = 118.7969;
@@ -722,13 +670,11 @@ injector:
           }
 
           try {
-            // 1. 尝试获取访问者位置
             const geoRes = await fetch('https://get.geojs.io/v1/ip/geo.json', {
               signal: AbortSignal.timeout(4000)
             });
             if (!geoRes.ok) throw new Error('geo failed');
             const loc = await geoRes.json();
-
             if (loc.latitude && loc.longitude) {
               const city = loc.city || loc.region || loc.country || '未知位置';
               await fetchWeather(loc.latitude, loc.longitude, city);
@@ -738,7 +684,6 @@ injector:
             console.warn('定位失败，使用默认南京', e);
           }
 
-          // 2. 失败时使用南京
           try {
             await fetchWeather(fallbackLat, fallbackLon, fallbackCity);
           } catch (e) {
