@@ -7,10 +7,29 @@
   let yiText = '宜：无特别事项';
   let jiText = '忌：无特别事项';
 
-  async function updateInfo() {
-    // 天气
+  // 从侧边栏读取已计算好的黄历，保证和侧边栏一致
+  function syncFromSidebar() {
+    const fortuneEl = document.getElementById('fortune');
+    const yiEl = document.getElementById('yi');
+    const jiEl = document.getElementById('ji');
+
+    if (fortuneEl && fortuneEl.textContent.trim()) {
+      fortuneText = fortuneEl.textContent.trim();
+    }
+    if (yiEl && yiEl.textContent.trim()) {
+      yiText = yiEl.textContent.trim();
+    }
+    if (jiEl && jiEl.textContent.trim()) {
+      jiText = jiEl.textContent.trim();
+    }
+  }
+
+  // 天气：定位 + 中文城市名（不使用映射表）
+  async function updateWeather() {
     try {
       let lat = 32.0603, lon = 118.7969, city = '南京';
+
+      // 1. 获取大致坐标
       try {
         const geoRes = await fetch('https://get.geojs.io/v1/ip/geo.json', {
           signal: AbortSignal.timeout(4000)
@@ -20,11 +39,35 @@
           if (loc.latitude && loc.longitude) {
             lat = loc.latitude;
             lon = loc.longitude;
-            city = loc.city || loc.region || loc.country || '未知位置';
           }
         }
       } catch (e) {}
 
+      // 2. 用坐标换中文地名（Nominatim，无需映射）
+      try {
+        const geoNameRes = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=zh`,
+          {
+            signal: AbortSignal.timeout(5000),
+            headers: { 'User-Agent': 'HugoBlog/1.0' }
+          }
+        );
+        if (geoNameRes.ok) {
+          const geoData = await geoNameRes.json();
+          // 优先取城市/区，没有就用上级
+          city =
+            geoData.address?.city ||
+            geoData.address?.town ||
+            geoData.address?.county ||
+            geoData.address?.state ||
+            geoData.address?.country ||
+            '未知位置';
+        }
+      } catch (e) {
+        // 逆地理失败就保持默认南京
+      }
+
+      // 3. 获取天气
       const weatherRes = await fetch(
         `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&timezone=auto`,
         { signal: AbortSignal.timeout(5000) }
@@ -49,22 +92,6 @@
     } catch (e) {
       weatherText = '南京 · 天气获取失败';
     }
-
-    // 农历宜忌 + 运势
-    if (typeof Solar !== 'undefined') {
-      try {
-        const lunar = Solar.fromDate(new Date()).getLunar();
-        const yi = lunar.getDayYi().slice(0, 3).join('、') || '无特别事项';
-        const ji = lunar.getDayJi().slice(0, 3).join('、') || '无特别事项';
-        yiText = '宜：' + yi;
-        jiText = '忌：' + ji;
-
-        const ganZhi = lunar.getDayInGanZhi();
-        const fortunes = ['大吉', '中吉', '小吉', '平', '小凶', '凶'];
-        const index = (ganZhi.charCodeAt(0) + ganZhi.charCodeAt(1)) % fortunes.length;
-        fortuneText = '今日运势：' + fortunes[index];
-      } catch (e) {}
-    }
   }
 
   function init() {
@@ -73,8 +100,15 @@
       return;
     }
 
-    updateInfo();
-    setInterval(updateInfo, 10 * 60 * 1000);
+    // 等侧边栏先渲染完再同步
+    setTimeout(() => {
+      syncFromSidebar();
+      updateWeather();
+    }, 800);
+
+    // 定时同步
+    setInterval(syncFromSidebar, 30 * 1000);
+    setInterval(updateWeather, 10 * 60 * 1000);
 
     OML2D.loadOml2d({
       models: [
@@ -92,28 +126,14 @@
         disable: true
       },
       tips: {
-        // 透明玻璃气泡（能看到网页背景）
         style: {
           width: 220,
           minHeight: 48,
           fontSize: 13,
           lineHeight: 1.5,
           padding: '10px 16px',
-          borderRadius: '16px',
-          background: 'rgba(255, 255, 255, 0.25)',
-          backdropFilter: 'blur(14px)',
-          WebkitBackdropFilter: 'blur(14px)',
-          color: '#1a1a2e',
-          boxShadow: '0 6px 20px rgba(0, 0, 0, 0.12)',
-          border: '1px solid rgba(255, 255, 255, 0.35)',
-          zIndex: 9999,
-          wordBreak: 'break-all'
+          borderRadius: '16px'
         },
-        mobileStyle: {
-          width: 170,
-          fontSize: 12
-        },
-        // 每个气泡只说一句完整内容
         idleTips: {
           interval: 8500,
           message: [

@@ -711,7 +711,11 @@ injector:
           } catch (e) {
             console.warn('定位失败，使用默认南京', e);
           }
-
+        // 逆地理拿中文名
+          const geoNameRes = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=zh`,
+          { headers: { 'User-Agent': 'HugoBlog/1.0' } }
+          );
           try {
             await fetchWeather(fallbackLat, fallbackLon, fallbackCity);
           } catch (e) {
