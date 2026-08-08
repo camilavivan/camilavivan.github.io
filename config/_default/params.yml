@@ -727,7 +727,7 @@ player:
       volume: 0.7
       mutex: true
       listFolded: false
-      lrcType: 1
+      lrcType: 2
   meting:
     enable: true
     meting_api: "https://api.i-meto.com/meting/api?server=:server&type=:type&id=:id&r=:r"

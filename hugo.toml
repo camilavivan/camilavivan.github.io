@@ -1,6 +1,6 @@
 baseURL = 'https://camilavivan.github.io/'          # 改成你的实际地址，比如 https://username.github.io/
 languageCode = 'zh-cn'
-title = '我的博客'                      # 改成你的网站标题
+title = '流水易寒的博客'                      # 改成你的网站标题
 theme = 'reimu'
 
 # 启用中文支持
@@ -29,3 +29,5 @@ baseName = "algolia"
 isPlainText = true
 mediaType = "application/json"
 notAlternative = true
+#获取Git日期
+enableGitInfo = true
