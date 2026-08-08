@@ -611,7 +611,7 @@ injector:
     <script src="https://cdn.jsdelivr.net/npm/lunar-javascript@1.6.12/lunar.min.js">
     </script>
   body_begin:
- body_end: |
+  body_end: |
     <script src="https://registry.npmmirror.com/oh-my-live2d/0.19.3/files/dist/index.min.js"></script>
     <script>
       (function() {
@@ -652,67 +652,14 @@ injector:
                   "别太放肆。",
                   "想算一卦吗？"
                 ]
+              // 复制文字时
+              copyTips: {
+                message: ["复制了什么？本座可是看在眼里的。"]
               }
             }
           });
         }
-    # <script src="https://cdn.jsdelivr.net/npm/oh-my-live2d@latest/dist/index.min.js"></script>
-    # <script>
-    #   (function() {
-    #     // ========== 符玄 Live2D ==========
-    #     if (!window.__fuxuanLoaded) {
-    #       window.__fuxuanLoaded = true;
-    #       OML2D.loadOml2d({
-    #         models: [
-    #           {
-    #             path: "/live2d/fuxuan/fuxuan.model3.json",
-    #             scale: 0.042,
-    #             position: [0, -15],
-    #             stageStyle: {
-    #               width: 240,
-    #               height: 460
-    #             }
-    #           }
-    #         ],
-    #         menus: {
-    #             disable: true          // 隐藏所有右侧按钮
-    #           },
-    #           tips: {
-    #             style: {
-    #             width: 230,
-    #             height: auto,
-    #             fontSize: 14
-    #           },
-    #           // 空闲时随机说话
-    #           idleTips: {
-    #             interval: 10000,     // 10秒说一次
-    #             message: [
-    #               "命由我定，运由我改。",
-    #               "星轨已定，你却仍在犹豫？",
-    #               "今日运势……让我算算。",
-    #               "有什么想问的，尽管说。",
-    #               "观察星象，洞察命运。"
-    #             ]
-    #           },
-    #           // 点击角色时的互动
-    #           clickTips: {
-    #             message: [
-    #               "嗯？找本座有事？",
-    #               "触碰星轨可是要付出代价的。",
-    #               "你的命运线……有些有趣。",
-    #               "本座在听。",
-    #               "别太放肆。",
-    #               "想算一卦吗？"
-    #             ]
-    #           },
-    #           // 复制文字时
-    #           copyTips: {
-    #             message: ["复制了什么？本座可是看在眼里的。"]
-    #           }
-    #         }
-    #       });
-    #     }
-
+        
         // ========== 时钟 + 农历 + 天气 ==========
         if (window.__reimuClockLoaded) return;
         window.__reimuClockLoaded = true;
