@@ -612,12 +612,31 @@ injector:
     </script>
   body_begin:
   body_end: |
+    <script src="https://unpkg.com/oh-my-live2d@latest"></script>
     <script>
       (function() {
+        // ========== 符玄 Live2D ==========
+        if (!window.__fuxuanLoaded) {
+          window.__fuxuanLoaded = true;
+          OML2D.loadOml2d({
+            models: [
+              {
+                path: "/live2d/fuxuan/fuxuan.model3.json",
+                scale: 0.13,
+                position: [0, 50],
+                stageStyle: {
+                  width: 300,
+                  height: 450
+                }
+              }
+            ]
+          });
+        }
+
+        // ========== 时钟 + 农历 + 天气 ==========
         if (window.__reimuClockLoaded) return;
         window.__reimuClockLoaded = true;
 
-        // 更新时间
         function updateTime() {
           const now = new Date();
           const timeEl = document.getElementById('clock-time');
@@ -628,19 +647,16 @@ injector:
           });
         }
 
-        // 更新农历 + 宜忌 + 运势
         function updateLunar() {
           if (typeof Solar === 'undefined') return;
 
           const solar = Solar.fromDate(new Date());
           const lunar = solar.getLunar();
 
-          // 农历
           const lunarText = `农历${lunar.getMonthInChinese()}月${lunar.getDayInChinese()} · ${lunar.getDayInGanZhi()}日`;
           const lunarEl = document.getElementById('lunar-date');
           if (lunarEl) lunarEl.textContent = lunarText;
 
-          // 宜忌（取前4个）
           const yi = lunar.getDayYi().slice(0, 4).join('、') || '无特别事项';
           const ji = lunar.getDayJi().slice(0, 4).join('、') || '无特别事项';
           
@@ -649,7 +665,6 @@ injector:
           if (yiEl) yiEl.textContent = '宜：' + yi;
           if (jiEl) jiEl.textContent = '忌：' + ji;
 
-          // 简单运势
           const ganZhi = lunar.getDayInGanZhi();
           const fortunes = ['大吉', '中吉', '小吉', '平', '小凶', '凶'];
           const index = (ganZhi.charCodeAt(0) + ganZhi.charCodeAt(1)) % fortunes.length;
@@ -657,16 +672,13 @@ injector:
           if (fortuneEl) fortuneEl.textContent = '今日运势：' + fortunes[index];
         }
 
-        // 天气（这里先写死，后面可换成真实API）
-        // 天气：优先获取访问者位置，失败则显示固定地址
         async function loadWeather() {
           const weatherEl = document.getElementById('weather-text');
           if (!weatherEl) return;
 
-          const fallback = '新加坡 · 晴 32°C';  // 获取失败时显示的固定内容
+          const fallback = '新加坡 · 晴 32°C';
 
           try {
-            // 1. 获取访问者大致位置
             const geoRes = await fetch('https://get.geojs.io/v1/ip/geo.json', {
               signal: AbortSignal.timeout(4000)
             });
@@ -677,7 +689,6 @@ injector:
 
             const city = loc.city || loc.region || loc.country || '未知位置';
 
-            // 2. 用坐标获取天气
             const weatherRes = await fetch(
               `https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current=temperature_2m,weather_code&timezone=auto`,
               { signal: AbortSignal.timeout(5000) }
@@ -695,11 +706,9 @@ injector:
             console.warn('自动定位天气失败，使用固定地址', e);
           }
 
-          // 失败时显示固定内容
           weatherEl.textContent = fallback;
         }
 
-        // 天气代码转中文（如果还没有这个函数，请一并加上）
         function getWeatherText(code) {
           const map = {
             0: '晴', 1: '晴', 2: '多云', 3: '阴',
@@ -712,13 +721,6 @@ injector:
           };
           return map[code] || '未知';
         }
-        # function loadWeather() {
-        #   const weatherEl = document.getElementById('weather-text');
-        #   if (weatherEl) {
-        #     // 你可以改成自己所在城市
-        #     weatherEl.textContent = '新加坡 · 晴 32°C';
-        #   }
-        # }
 
         setInterval(updateTime, 1000);
         updateTime();
@@ -726,6 +728,121 @@ injector:
         loadWeather();
       })();
     </script>
+  # body_end: |
+  #   <script>
+  #     (function() {
+  #       if (window.__reimuClockLoaded) return;
+  #       window.__reimuClockLoaded = true;
+
+  #       // 更新时间
+  #       function updateTime() {
+  #         const now = new Date();
+  #         const timeEl = document.getElementById('clock-time');
+  #         const dateEl = document.getElementById('clock-date');
+  #         if (timeEl) timeEl.textContent = now.toLocaleTimeString('zh-CN', { hour12: false });
+  #         if (dateEl) dateEl.textContent = now.toLocaleDateString('zh-CN', {
+  #           year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
+  #         });
+  #       }
+
+  #       // 更新农历 + 宜忌 + 运势
+  #       function updateLunar() {
+  #         if (typeof Solar === 'undefined') return;
+
+  #         const solar = Solar.fromDate(new Date());
+  #         const lunar = solar.getLunar();
+
+  #         // 农历
+  #         const lunarText = `农历${lunar.getMonthInChinese()}月${lunar.getDayInChinese()} · ${lunar.getDayInGanZhi()}日`;
+  #         const lunarEl = document.getElementById('lunar-date');
+  #         if (lunarEl) lunarEl.textContent = lunarText;
+
+  #         // 宜忌（取前4个）
+  #         const yi = lunar.getDayYi().slice(0, 4).join('、') || '无特别事项';
+  #         const ji = lunar.getDayJi().slice(0, 4).join('、') || '无特别事项';
+          
+  #         const yiEl = document.getElementById('yi');
+  #         const jiEl = document.getElementById('ji');
+  #         if (yiEl) yiEl.textContent = '宜：' + yi;
+  #         if (jiEl) jiEl.textContent = '忌：' + ji;
+
+  #         // 简单运势
+  #         const ganZhi = lunar.getDayInGanZhi();
+  #         const fortunes = ['大吉', '中吉', '小吉', '平', '小凶', '凶'];
+  #         const index = (ganZhi.charCodeAt(0) + ganZhi.charCodeAt(1)) % fortunes.length;
+  #         const fortuneEl = document.getElementById('fortune');
+  #         if (fortuneEl) fortuneEl.textContent = '今日运势：' + fortunes[index];
+  #       }
+
+  #       // 天气（这里先写死，后面可换成真实API）
+  #       // 天气：优先获取访问者位置，失败则显示固定地址
+  #       async function loadWeather() {
+  #         const weatherEl = document.getElementById('weather-text');
+  #         if (!weatherEl) return;
+
+  #         const fallback = '新加坡 · 晴 32°C';  // 获取失败时显示的固定内容
+
+  #         try {
+  #           // 1. 获取访问者大致位置
+  #           const geoRes = await fetch('https://get.geojs.io/v1/ip/geo.json', {
+  #             signal: AbortSignal.timeout(4000)
+  #           });
+  #           if (!geoRes.ok) throw new Error('geo failed');
+  #           const loc = await geoRes.json();
+
+  #           if (!loc.latitude || !loc.longitude) throw new Error('no coords');
+
+  #           const city = loc.city || loc.region || loc.country || '未知位置';
+
+  #           // 2. 用坐标获取天气
+  #           const weatherRes = await fetch(
+  #             `https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current=temperature_2m,weather_code&timezone=auto`,
+  #             { signal: AbortSignal.timeout(5000) }
+  #           );
+  #           if (!weatherRes.ok) throw new Error('weather failed');
+  #           const data = await weatherRes.json();
+
+  #           if (data.current) {
+  #             const temp = Math.round(data.current.temperature_2m);
+  #             const text = getWeatherText(data.current.weather_code);
+  #             weatherEl.textContent = `${city} · ${text} ${temp}°C`;
+  #             return;
+  #           }
+  #         } catch (e) {
+  #           console.warn('自动定位天气失败，使用固定地址', e);
+  #         }
+
+  #         // 失败时显示固定内容
+  #         weatherEl.textContent = fallback;
+  #       }
+
+  #       // 天气代码转中文（如果还没有这个函数，请一并加上）
+  #       function getWeatherText(code) {
+  #         const map = {
+  #           0: '晴', 1: '晴', 2: '多云', 3: '阴',
+  #           45: '雾', 48: '雾',
+  #           51: '小雨', 53: '中雨', 55: '大雨',
+  #           61: '小雨', 63: '中雨', 65: '大雨',
+  #           71: '小雪', 73: '中雪', 75: '大雪',
+  #           80: '阵雨', 81: '阵雨', 82: '暴雨',
+  #           95: '雷阵雨', 96: '雷阵雨', 99: '雷暴'
+  #         };
+  #         return map[code] || '未知';
+  #       }
+  #       # function loadWeather() {
+  #       #   const weatherEl = document.getElementById('weather-text');
+  #       #   if (weatherEl) {
+  #       #     // 你可以改成自己所在城市
+  #       #     weatherEl.textContent = '新加坡 · 晴 32°C';
+  #       #   }
+  #       # }
+
+  #       setInterval(updateTime, 1000);
+  #       updateTime();
+  #       updateLunar();
+  #       loadWeather();
+  #     })();
+  #   </script>
   sidebar_begin: |
     <div class="widget" id="reimu-clock">
       <div class="time" id="clock-time">--:--:--</div>
