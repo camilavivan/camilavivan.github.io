@@ -622,14 +622,17 @@ injector:
             models: [
               {
                 path: "/live2d/fuxuan/fuxuan.model3.json",
-                scale: 0.13,
-                position: [0, 50],
+                scale: 0.09,
+                position: [10, 20],
                 stageStyle: {
-                  width: 300,
-                  height: 450
+                  width: 320,
+                  height: 520
                 }
               }
-            ]
+            ],
+            menus: {
+              disable: true
+            }
           });
         }
 
@@ -672,25 +675,18 @@ injector:
           if (fortuneEl) fortuneEl.textContent = '今日运势：' + fortunes[index];
         }
 
+        // 天气：固定新加坡坐标，获取真实天气
         async function loadWeather() {
           const weatherEl = document.getElementById('weather-text');
           if (!weatherEl) return;
 
-          const fallback = '新加坡 · 晴 32°C';
+          const cityName = '新加坡';
+          const lat = 1.3521;   // 新加坡纬度
+          const lon = 103.8198; // 新加坡经度
 
           try {
-            const geoRes = await fetch('https://get.geojs.io/v1/ip/geo.json', {
-              signal: AbortSignal.timeout(4000)
-            });
-            if (!geoRes.ok) throw new Error('geo failed');
-            const loc = await geoRes.json();
-
-            if (!loc.latitude || !loc.longitude) throw new Error('no coords');
-
-            const city = loc.city || loc.region || loc.country || '未知位置';
-
             const weatherRes = await fetch(
-              `https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current=temperature_2m,weather_code&timezone=auto`,
+              `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&timezone=Asia%2FSingapore`,
               { signal: AbortSignal.timeout(5000) }
             );
             if (!weatherRes.ok) throw new Error('weather failed');
@@ -699,14 +695,15 @@ injector:
             if (data.current) {
               const temp = Math.round(data.current.temperature_2m);
               const text = getWeatherText(data.current.weather_code);
-              weatherEl.textContent = `${city} · ${text} ${temp}°C`;
+              weatherEl.textContent = `${cityName} · ${text} ${temp}°C`;
               return;
             }
           } catch (e) {
-            console.warn('自动定位天气失败，使用固定地址', e);
+            console.warn('获取新加坡天气失败', e);
           }
 
-          weatherEl.textContent = fallback;
+          // 失败时显示备用文字
+          weatherEl.textContent = '新加坡 · 天气获取失败';
         }
 
         function getWeatherText(code) {
