@@ -830,13 +830,8 @@ injector:
       <div class="time" id="clock-time">--:--:--</div>
       <div class="date" id="clock-date">加载中...</div>
       <div class="lunar" id="lunar-date">农历加载中...</div>
-      <div class="fortune" id="fortune">今日运势：计算中...</div>
       <div class="weather">
         <span id="weather-text">正在获取天气...</span>
-      </div>
-      <div class="yi-ji">
-        <div class="yi" id="yi">宜：加载中...</div>
-        <div class="ji" id="ji">忌：加载中...</div>
       </div>
     </div>
   sidebar_end:
