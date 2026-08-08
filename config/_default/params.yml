@@ -622,7 +622,7 @@ injector:
             models: [
               {
                 path: "/live2d/fuxuan/fuxuan.model3.json",
-                scale: 0.048,              // 再缩小一点
+                scale: 0.042,
                 position: [0, -15],
                 stageStyle: {
                   width: 240,
@@ -639,20 +639,20 @@ injector:
                 },
                 {
                   id: 'SwitchModel',
-                  icon: 'icon-switch-model',
+                  icon: 'icon-switch',        // 正确图标
                   title: '切换模型'
                 },
                 {
                   id: 'SwitchTexture',
-                  icon: 'icon-switch-texture',
-                  title: '换装'              // 开启换装
+                  icon: 'icon-skin',          // 正确图标（换装）
+                  title: '换装'
                 },
                 {
                   id: 'About',
                   icon: 'icon-about',
                   title: '关于',
                   onClick: () => {
-                    window.open('https://hugo.kkun.top', '_blank');  // 跳转到你的博客
+                    window.open('https://hugo.kkun.top', '_blank');
                   }
                 }
               ]
@@ -699,34 +699,51 @@ injector:
           if (fortuneEl) fortuneEl.textContent = '今日运势：' + fortunes[index];
         }
 
-        // 天气：固定南京，获取真实天气
+        // 天气：优先访问者位置，失败则使用南京
         async function loadWeather() {
           const weatherEl = document.getElementById('weather-text');
           if (!weatherEl) return;
 
-          const cityName = '南京';
-          const lat = 32.0603;    // 南京纬度
-          const lon = 118.7969;   // 南京经度
+          const fallbackCity = '南京';
+          const fallbackLat = 32.0603;
+          const fallbackLon = 118.7969;
 
-          try {
-            const weatherRes = await fetch(
-              `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&timezone=Asia%2FShanghai`,
+          async function fetchWeather(lat, lon, cityName) {
+            const res = await fetch(
+              `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&timezone=auto`,
               { signal: AbortSignal.timeout(5000) }
             );
-            if (!weatherRes.ok) throw new Error('weather failed');
-            const data = await weatherRes.json();
+            if (!res.ok) throw new Error('weather api failed');
+            const data = await res.json();
+            if (!data.current) throw new Error('no current data');
+            const temp = Math.round(data.current.temperature_2m);
+            const text = getWeatherText(data.current.weather_code);
+            weatherEl.textContent = `${cityName} · ${text} ${temp}°C`;
+          }
 
-            if (data.current) {
-              const temp = Math.round(data.current.temperature_2m);
-              const text = getWeatherText(data.current.weather_code);
-              weatherEl.textContent = `${cityName} · ${text} ${temp}°C`;
+          try {
+            // 1. 尝试获取访问者位置
+            const geoRes = await fetch('https://get.geojs.io/v1/ip/geo.json', {
+              signal: AbortSignal.timeout(4000)
+            });
+            if (!geoRes.ok) throw new Error('geo failed');
+            const loc = await geoRes.json();
+
+            if (loc.latitude && loc.longitude) {
+              const city = loc.city || loc.region || loc.country || '未知位置';
+              await fetchWeather(loc.latitude, loc.longitude, city);
               return;
             }
           } catch (e) {
-            console.warn('获取南京天气失败', e);
+            console.warn('定位失败，使用默认南京', e);
           }
 
-          weatherEl.textContent = '南京 · 天气获取失败';
+          // 2. 失败时使用南京
+          try {
+            await fetchWeather(fallbackLat, fallbackLon, fallbackCity);
+          } catch (e) {
+            weatherEl.textContent = '南京 · 天气获取失败';
+          }
         }
 
         function getWeatherText(code) {
