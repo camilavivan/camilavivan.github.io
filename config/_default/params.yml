@@ -612,6 +612,20 @@ injector:
     </script>
   body_begin:
   body_end: |
+    <style>
+      .oml2d-tips,
+      .oml2d-tip,
+      [class*="oml2d"][class*="tip"] {
+        background: rgba(255, 255, 255, 0.22) !important;
+        backdrop-filter: blur(14px) !important;
+        -webkit-backdrop-filter: blur(14px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.35) !important;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12) !important;
+        color: #1a1a2e !important;
+        border-radius: 16px !important;
+        z-index: 9999 !important;
+      }
+      </style>
     <script src="https://cdn.jsdelivr.net/npm/oh-my-live2d@0.19.3/dist/index.min.js"></script>
     <script src="/js/fuxuan-live2d.js"></script>
     <script>
