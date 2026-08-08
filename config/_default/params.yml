@@ -631,31 +631,40 @@ injector:
               }
             ],
             menus: {
-              items: [
-                {
-                  id: 'Rest',
-                  icon: 'icon-rest',
-                  title: '休息'
-                },
-                {
-                  id: 'SwitchModel',
-                  icon: 'icon-switch',        // 正确图标
-                  title: '切换模型'
-                },
-                {
-                  id: 'SwitchTexture',
-                  icon: 'icon-skin',          // 正确图标（换装）
-                  title: '换装'
-                },
-                {
-                  id: 'About',
-                  icon: 'icon-about',
-                  title: '关于',
-                  onClick: () => {
-                    window.open('https://hugo.kkun.top', '_blank');
-                  }
-                }
-              ]
+                disable: true          // 隐藏所有右侧按钮
+              },
+              tips: {
+                style: {
+                width: 230,
+                height: auto,
+                fontSize: 14
+              },
+              // 空闲时随机说话
+              idleTips: {
+                interval: 10000,     // 10秒说一次
+                message: [
+                  "命由我定，运由我改。",
+                  "星轨已定，你却仍在犹豫？",
+                  "今日运势……让我算算。",
+                  "有什么想问的，尽管说。",
+                  "观察星象，洞察命运。"
+                ]
+              },
+              // 点击角色时的互动
+              clickTips: {
+                message: [
+                  "嗯？找本座有事？",
+                  "触碰星轨可是要付出代价的。",
+                  "你的命运线……有些有趣。",
+                  "本座在听。",
+                  "别太放肆。",
+                  "想算一卦吗？"
+                ]
+              },
+              // 复制文字时
+              copyTips: {
+                message: ["复制了什么？本座可是看在眼里的。"]
+              }
             }
           });
         }
