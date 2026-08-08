@@ -2,6 +2,7 @@
   if (window.__fuxuanLoaded) return;
   window.__fuxuanLoaded = true;
 
+  // 从侧边栏读取最新信息
   function getSidebarInfo() {
     const fortune = (document.getElementById('fortune')?.textContent || '今日运势：平').trim();
     const weather = (document.getElementById('weather-text')?.textContent || '天气获取中...').trim();
@@ -45,11 +46,13 @@
     content.textContent = text;
 
     // 强制显示气泡
-    tip.style.opacity = '1';
-    tip.style.visibility = 'visible';
+    tip.style.setProperty('opacity', '1', 'important');
+    tip.style.setProperty('visibility', 'visible', 'important');
+    tip.style.setProperty('display', 'flex', 'important');
+    tip.classList.remove('oml2d-hidden-tips');
   }
 
-  // 空闲：1~8 秒随机间隔
+  // 空闲：1~8 秒随机间隔自动换句
   function scheduleNextIdle() {
     if (idleTimer) clearTimeout(idleTimer);
     const delay = 1000 + Math.random() * 7000; // 1~8 秒
@@ -59,24 +62,33 @@
     }, delay);
   }
 
-  // 点击看板娘：立刻换一句，并重置空闲计时
+  // 点击看板娘：立刻换句，并重置空闲计时
   function bindClick() {
-    // 尝试绑定到舞台 / canvas
-    const stage =
-      document.getElementById('oml2d-stage') ||
-      document.querySelector('#oml2d canvas') ||
-      document.querySelector('[id*="oml2d"] canvas') ||
-      document.querySelector('.oml2d-stage');
-
-    const target = stage || document.body;
-
-    target.addEventListener('click', function (e) {
-      // 只响应看板娘区域附近的点击（简单判断）
-      const tip = document.getElementById('oml2d-tips');
-      if (!tip) return;
-
+    const handler = function () {
       showTip(getNextMessage());
-      scheduleNextIdle(); // 点击后重新开始随机计时
+      scheduleNextIdle();
+    };
+
+    const candidates = [
+      document.getElementById('oml2d-stage'),
+      document.getElementById('oml2d'),
+      document.querySelector('#oml2d-stage'),
+      document.querySelector('[id*="oml2d"]'),
+      document.querySelector('#oml2d canvas'),
+      document.querySelector('canvas')
+    ].filter(Boolean);
+
+    candidates.forEach(function (el) {
+      el.addEventListener('click', handler);
+    });
+
+    // 兜底：点击到 canvas 或 oml2d 相关区域时触发
+    document.addEventListener('click', function (e) {
+      const t = e.target;
+      if (!t) return;
+      if (t.tagName === 'CANVAS' || t.closest('[id*="oml2d"]')) {
+        handler();
+      }
     });
   }
 
@@ -110,7 +122,7 @@
           padding: '10px 16px',
           borderRadius: '16px'
         },
-        // 关闭库自带的定时和点击文案，改由我们自己控制
+        // 关闭库自带定时，改由我们控制
         idleTips: {
           interval: 999999,
           message: ['命由我定，运由我改。']
@@ -122,7 +134,7 @@
     });
 
     // 启动自定义逻辑
-    setTimeout(() => {
+    setTimeout(function () {
       bindClick();
       showTip(getNextMessage());
       scheduleNextIdle();

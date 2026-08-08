@@ -553,15 +553,16 @@ injector:
   head_begin:
   head_end: |
     <style>
+      /* ========== 时钟卡片 ========== */
       #reimu-clock {
         background: var(--color-card-bg, var(--card-bg, #1e1e2e));
         border-radius: 12px;
         padding: 16px 12px;
         margin-bottom: 1.2rem;
         text-align: center;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
         color: var(--color-text, #e0e0e0);
-        border: 1px solid rgba(255,255,255,0.05);
+        border: 1px solid rgba(217, 70, 239, 0.12);
         font-size: 0.92em;
       }
       #reimu-clock .time {
@@ -607,39 +608,48 @@ injector:
       #reimu-clock .ji {
         color: #e74c3c;
       }
-    </style>
-    <script src="https://cdn.jsdelivr.net/npm/lunar-javascript@1.6.12/lunar.min.js">
-    </script>
+
+      /* ========== 侧边栏卡片统一（跟随符玄主题） ========== */
+      .widget,
+      .sidebar .widget,
+      .sidebar-wrapper .widget {
+        background: var(--color-card-bg, var(--card-bg, #1e1e2e)) !important;
+        border: 1px solid rgba(217, 70, 239, 0.12) !important;
+        border-radius: 12px !important;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08) !important;
+      }
+
+      /* ========== 看板娘气泡：透明玻璃 + 位置 ========== */
+      /* 气泡样式：透明玻璃 */
+      #oml2d-tips {
+        background: rgba(255, 255, 255, 0.22) !important;
+        backdrop-filter: blur(14px) !important;
+        -webkit-backdrop-filter: blur(14px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.4) !important;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12) !important;
+        color: #1a1a2e !important;
+        border-radius: 16px !important;
+        z-index: 99999 !important;
+
+        /* 关键：往上移，避免和人物重叠 */
+        top: -70px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+      }
+
+      #oml2d-tips-content {
+        color: #1a1a2e !important;
+        background: transparent !important;
+        -webkit-line-clamp: unset !important;
+        display: block !important;
+        overflow: visible !important;
+        text-overflow: unset !important;
+        max-height: none !important;
+      }
+      </style>
+      <script src="https://cdn.jsdelivr.net/npm/lunar-javascript@1.6.12/lunar.min.js"></script>
   body_begin:
   body_end: |
-    <style>
-    /* 气泡样式：透明玻璃 */
-    #oml2d-tips {
-      background: rgba(255, 255, 255, 0.22) !important;
-      backdrop-filter: blur(14px) !important;
-      -webkit-backdrop-filter: blur(14px) !important;
-      border: 1px solid rgba(255, 255, 255, 0.4) !important;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12) !important;
-      color: #1a1a2e !important;
-      border-radius: 16px !important;
-      z-index: 99999 !important;
-
-      /* 关键：往上移，避免和人物重叠 */
-      top: -70px !important;
-      left: 50% !important;
-      transform: translateX(-50%) !important;
-    }
-
-    #oml2d-tips-content {
-      color: #1a1a2e !important;
-      background: transparent !important;
-      -webkit-line-clamp: unset !important;
-      display: block !important;
-      overflow: visible !important;
-      text-overflow: unset !important;
-      max-height: none !important;
-    }
-    </style>
     <script src="https://cdn.jsdelivr.net/npm/oh-my-live2d@0.19.3/dist/index.min.js"></script>
     <script src="/js/fuxuan-live2d.js"></script>
     <script>
@@ -761,7 +771,7 @@ injector:
       };
       return map[code] || '未知';
     }
-    
+
         setInterval(updateTime, 1000);
         updateTime();
         updateLunar();
