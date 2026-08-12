@@ -357,7 +357,11 @@ Look at the log file "/oracle/app/oracle/cfgtoollogs/dbca/primary/primary.log" f
 
 ## 问题一：minssing commond fuser
 
-解决方法：yum install -y psmisc
+解决方法：
+
+```bash
+yum install -y psmisc
+```
 
 ## 修改SID或者字符集
 
