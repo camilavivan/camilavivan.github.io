@@ -358,3 +358,28 @@ Look at the log file "/oracle/app/oracle/cfgtoollogs/dbca/primary/primary.log" f
 ## 问题一：minssing commond fuser
 
 解决方法：yum install -y psmisc
+
+## 修改SID或者字符集
+
+```bash
+# 2. 删除数据库（会清除所有数据！）
+dbca -silent -deleteDatabase -sourceDB orcl -sysDBAUserName sys -sysDBAPassword 你的sys密码
+
+# dbca.rsp，需要修改的地方如下（已按你的要求把 SID 改成 xtd，并加上 ZHS16GBK 字符集）
+[CREATEDATABASE]
+GDBNAME = xtd                          # ← 原来是 primary，已改
+SID = xtd                              # ← 原来是 primary，已改
+TEMPLATENAME = "General_Purpose.dbc"
+CHARACTERSET = "ZHS16GBK"              # ← 原来是 AL16UTF16，已改
+NATIONALCHARACTERSET = "AL16UTF16"     # ← 建议新增这一行
+TOTALMEMORY = "800"
+
+```
+
+修改之后就可以重新创建
+
+|参数|含义|你应该填什么|
+|--|--|--|
+|-sourceDB orcl|要删除的数据库的 SID（实例名）|改成你实际的数据库 SID。你之前创建的如果是 orcl，就保持 orcl；如果是别的名字（比如 primary），就改成那个名字
+|-sysDBAUserName sys|用哪个用户以 SYSDBA 权限去删除数据库|一般固定写 sys，不用改|
+|-sysDBAPassword 你的sys密码|sys 用户的密码|改成你安装/创建数据库时给 sys 用户设置的真实密码|
